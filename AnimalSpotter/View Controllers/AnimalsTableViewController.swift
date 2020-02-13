@@ -79,6 +79,8 @@ class AnimalsTableViewController: UITableViewController {
                             NSLog("Data received was invalid, corrupt, or doesnt exist")
                         case .noDecode:
                             NSLog("Animal JSON data could not be decoded")
+                        default:
+                            NSLog("Other error ocured")
                         
                     }
                 }

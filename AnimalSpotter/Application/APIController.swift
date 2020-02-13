@@ -15,11 +15,13 @@ enum HTTPMethod: String {
 }
 
 enum NetworkError: Error {
+    case badUrl
     case noAuth
     case badAuth
     case otherError
     case badData
     case noDecode
+    case badImage
 }
 
 class APIController {
@@ -224,4 +226,35 @@ class APIController {
     }
     
     // create function to fetch image
+    
+    func fetchImage(at urlString: String, completion: @escaping (Result<UIImage, NetworkError>) -> Void) {
+        guard let imageURL = URL(string: urlString) else {
+            completion(.failure(.badUrl))
+            return
+        }
+        
+        var request = URLRequest(url: imageURL)
+        request.httpMethod = HTTPMethod.get.rawValue
+        
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let _ = error {
+                completion(.failure(.otherError))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(.badData))
+                return
+            }
+            
+            guard let image = UIImage(data: data) else {
+                completion(.failure(.badImage))
+                return
+            }
+            
+            completion(.success(image))
+            
+        }.resume()
+        
+    }
 }
