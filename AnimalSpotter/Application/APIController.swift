@@ -147,7 +147,7 @@ class APIController {
         
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
-                NSLog("Error receiveing anial name data: \(error)")
+                NSLog("Error receiveing animal name data: \(error)")
                 completion(.failure(.otherError))
             }
             
@@ -168,6 +168,52 @@ class APIController {
                 
             } catch {
                 NSLog("Error decoding animal objects: \(error)")
+                completion(.failure(.noDecode))
+                return
+            }
+            
+        }.resume()
+        
+        
+    }
+    
+    // fetch a specific animal
+    func fetchDetails(for animalName: String, completion: @escaping (Result<Animal, NetworkError>) -> Void) {
+        guard let bearer = bearer else {
+            completion(.failure(.noAuth))
+            return
+        }
+        
+        let animalURL = baseUrl.appendingPathComponent("animals/\(animalName)")
+        
+        var request = URLRequest(url: animalURL)
+        request.httpMethod = HTTPMethod.get.rawValue
+        request.setValue("Bearer \(bearer.token)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                NSLog("Error receiveing animal detail data: \(error)")
+                completion(.failure(.otherError))
+            }
+            
+            if let response = response as? HTTPURLResponse,
+                response.statusCode == 401 {
+                completion(.failure(.badAuth))
+            }
+            
+            guard let data = data else {
+                completion(.failure(.badData))
+                return
+            }
+            
+            let jsonDecoder = JSONDecoder()
+            jsonDecoder.dateDecodingStrategy = .secondsSince1970
+            do {
+                let animal = try jsonDecoder.decode(Animal.self, from: data)
+                completion(.success(animal))
+                
+            } catch {
+                NSLog("Error decoding animal object: \(error)")
                 completion(.failure(.noDecode))
                 return
             }
