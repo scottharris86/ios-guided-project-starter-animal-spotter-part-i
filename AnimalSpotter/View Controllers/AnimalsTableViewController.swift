@@ -50,6 +50,41 @@ class AnimalsTableViewController: UITableViewController {
     
     @IBAction func getAnimals(_ sender: UIBarButtonItem) {
         // fetch all animals from API
+        apiController.fetchAllAnimalNames { result in
+            // this treats the throwable method result like an optional
+            // success provies an array of strings, and failure provides a nil value
+//            if let names = try? result.get() {
+//                DispatchQueue.main.async {
+//                    self.animalNames = names
+//                    self.tableView.reloadData()
+//                }
+//            }
+            
+            do {
+                let names = try result.get()
+                DispatchQueue.main.async {
+                    self.animalNames = names
+                    self.tableView.reloadData()
+                }
+            } catch {
+                if let error = error as? NetworkError {
+                    switch error {
+                        case .noAuth:
+                            NSLog("No Bearer token, please log in.")
+                        case .badAuth:
+                            NSLog("Bearer token invalid.")
+                        case .otherError:
+                            NSLog("Generic netowrk error occured")
+                        case .badData:
+                            NSLog("Data received was invalid, corrupt, or doesnt exist")
+                        case .noDecode:
+                            NSLog("Animal JSON data could not be decoded")
+                        
+                    }
+                }
+            }
+        }
+        
     }
     
     // MARK: - Navigation
